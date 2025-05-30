@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Node File Manager</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 50px;
+    }
+
+    h2 {
+      color: #333;
+    }
+
+    .container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      width: 400px;
+      text-align: center;
+    }
+
+    input[type="text"], textarea {
+      padding: 10px;
+      width: 100%;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    textarea {
+      height: 100px;
+      resize: vertical;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      border: none;
+      border-radius: 5px;
+      background-color: #007BFF;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    pre {
+      background: #eef;
+      padding: 15px;
+      border-radius: 5px;
+      margin-top: 20px;
+      max-height: 200px;
+      overflow-y: auto;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>Node.js File Manager</h2>
+
+    <input type="text" id="filename" placeholder="Enter filename" />
+    <textarea id="filecontent" placeholder="Enter content for the file..."></textarea>
+
+    <button onclick="fileAction('create')">Create File</button>
+    <button onclick="fileAction('read')">Read File</button>
+    <button onclick="fileAction('delete')">Delete File</button>
+
+    <pre id="result">Result will appear here...</pre>
+  </div>
+
+  <script>
+    function fileAction(action) {
+      const name = document.getElementById("filename").value || "test.txt";
+      const content = document.getElementById("filecontent").value;
+
+      if (action === "create") {
+        fetch(`/create?name=${name}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content })
+        })
+          .then(response => response.text())
+          .then(data => {
+            document.getElementById("result").innerText = data;
+          })
+          .catch(err => {
+            document.getElementById("result").innerText = "Error: " + err;
+          });
+      } else {
+        fetch(`/${action}?name=${name}`)
+          .then(response => response.text())
+          .then(data => {
+            document.getElementById("result").innerText = data;
+          })
+          .catch(err => {
+            document.getElementById("result").innerText = "Error: " + err;
+          });
+      }
+    }
+  </script>
+
+</body>
+</html>

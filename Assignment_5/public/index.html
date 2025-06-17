@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CRUD App</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #74ebd5, #9face6);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      background: white;
+      padding: 30px 40px;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      max-width: 600px;
+      width: 100%;
+    }
+
+    h2 {
+      margin-bottom: 25px;
+      border-left: 4px solid #9face6;
+      padding-left: 10px;
+      font-weight: 600;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="number"] {
+      padding: 10px 14px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      font-size: 14px;
+      transition: 0.3s ease;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #9face6;
+      box-shadow: 0 0 0 2px rgba(159, 172, 230, 0.3);
+    }
+
+    button {
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #74ebd5, #9face6);
+      color: black;
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .toggle-btn {
+      margin-top: 20px;
+      width: 100%;
+      background: linear-gradient(135deg, #9face6, #74ebd5);
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 20px;
+    }
+
+    li {
+      background: #f4f7ff;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .user-info {
+      flex: 1;
+      font-size: 14px;
+      color: #333;
+    }
+
+    .action-btn {
+      margin-left: 10px;
+      padding: 6px 10px;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      color: black;
+    }
+
+    .edit-btn {
+      background-color: #28a745;
+    }
+
+    .delete-btn {
+      background-color: #e74c3c;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 20px;
+      }
+
+      li {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .action-btn {
+        margin-top: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>User Management</h2>
+    <form id="userForm">
+      <input type="hidden" id="userId" />
+      <input type="text" id="name" placeholder="Name" required />
+      <input type="email" id="email" placeholder="Email" required />
+      <input type="number" id="age" placeholder="Age" required />
+      <button type="submit" id="formButton">Add</button>
+    </form>
+
+    <button class="toggle-btn" onclick="toggleUserList()">Show Users</button>
+    <ul id="userList" style="display: none;"></ul>
+  </div>
+
+  <script>
+    const API_URL = "/api/users";
+
+    async function loadUsers() {
+      const res = await fetch(API_URL);
+      const users = await res.json();
+      const list = document.getElementById("userList");
+      list.innerHTML = "";
+      users.forEach(user => {
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <span class="user-info">${user.name} (${user.age}) - ${user.email}</span>
+          <div>
+            <button class="action-btn edit-btn" onclick="editUser('${user._id}', '${user.name}', '${user.email}', ${user.age})">Edit</button>
+            <button class="action-btn delete-btn" onclick="deleteUser('${user._id}')">Delete</button>
+          </div>
+        `;
+        list.appendChild(li);
+      });
+    }
+
+    async function deleteUser(id) {
+      await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+      loadUsers();
+    }
+
+    function editUser(id, name, email, age) {
+      document.getElementById("userId").value = id;
+      document.getElementById("name").value = name;
+      document.getElementById("email").value = email;
+      document.getElementById("age").value = age;
+      document.getElementById("formButton").innerText = "Update";
+    }
+
+    document.getElementById("userForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const id = document.getElementById("userId").value;
+      const name = document.getElementById("name").value;
+      const email = document.getElementById("email").value;
+      const age = document.getElementById("age").value;
+
+      const payload = { name, email, age };
+
+      try {
+        if (id) {
+          await fetch(`${API_URL}/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+        } else {
+          const res = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+
+          if (!res.ok) {
+            const errorData = await res.json();
+            alert(errorData.message || "Failed to add user.");
+            return;
+          }
+        }
+
+        document.getElementById("userForm").reset();
+        document.getElementById("formButton").innerText = "Add";
+        document.getElementById("userId").value = "";
+        if (isVisible) loadUsers();
+      } catch (err) {
+        alert("Error occurred. Please try again.");
+        console.error(err);
+      }
+    });
+
+    let isVisible = false;
+    function toggleUserList() {
+      const userList = document.getElementById("userList");
+      if (!isVisible) {
+        loadUsers();
+        userList.style.display = "block";
+        isVisible = true;
+      } else {
+        userList.style.display = "none";
+        isVisible = false;
+      }
+    }
+  </script>
+</body>
+</html>

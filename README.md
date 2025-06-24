@@ -14,3 +14,6 @@ Set up a simple web server using Express.js that can handle basic routing and mi
 
 # Assignment no. 5 - Build a CRUD application with MongoDB.
 Develop a simple application to Create, Read, Update, and Delete (CRUD) entries in a MongoDB database using Mongoose.
+
+# Assignment no. 6 - Develop a RESTful API.
+Create a RESTful API using Node.js and Express that supports basic CRUD operations on a resource (like users, products, etc.)

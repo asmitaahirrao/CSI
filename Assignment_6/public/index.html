@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Product CRUD</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #2bb3a9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background-color: #fff;
+      border-radius: 20px;
+      padding: 30px 40px;
+      width: 400px;
+      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+      text-align: center;
+    }
+
+    h2 {
+      color: #2bb3a9;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      text-align: left;
+      margin-top: 10px;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      outline: none;
+    }
+
+    button {
+      width: 48%;
+      background-color: #2bb3a9;
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 25px;
+      font-size: 14px;
+      cursor: pointer;
+      margin: 5px 1%;
+    }
+
+    button:hover {
+      background-color: #23998f;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    td, th {
+      border: 1px solid #ccc;
+      padding: 8px;
+      font-size: 14px;
+    }
+
+    th {
+      background-color: #f1f1f1;
+      color: #444;
+    }
+
+    .toast {
+      visibility: hidden;
+      min-width: 250px;
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      border-radius: 5px;
+      padding: 10px;
+      position: fixed;
+      z-index: 1;
+      left: 50%;
+      bottom: 30px;
+      transform: translateX(-50%);
+      font-size: 16px;
+    }
+
+    .toast.show {
+      visibility: visible;
+      animation: fadein 0.5s, fadeout 0.5s 2s;
+    }
+
+    @keyframes fadein {
+      from { bottom: 20px; opacity: 0; }
+      to { bottom: 30px; opacity: 1; }
+    }
+
+    @keyframes fadeout {
+      from { bottom: 30px; opacity: 1; }
+      to { bottom: 20px; opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Product Registration</h2>
+    <input type="hidden" id="productId">
+    <label for="name">Name:</label>
+    <input id="name" placeholder="Enter product name">
+    <label for="price">Price:</label>
+    <input id="price" type="number" placeholder="Enter price">
+    <div>
+      <button onclick="addProduct()">Add</button>
+      <button onclick="fetchProducts()">Show All</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>Name</th><th>Price</th><th>Actions</th></tr>
+      </thead>
+      <tbody id="productTable"></tbody>
+    </table>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const api = '/api/products';
+
+    function showToast(message, color = '#333') {
+      const toast = document.getElementById('toast');
+      toast.innerText = message;
+      toast.style.backgroundColor = color;
+      toast.className = 'toast show';
+      setTimeout(() => { toast.className = toast.className.replace('show', ''); }, 2500);
+    }
+
+    function clearForm() {
+      document.getElementById('productId').value = '';
+      document.getElementById('name').value = '';
+      document.getElementById('price').value = '';
+    }
+
+    async function fetchProducts() {
+      const res = await fetch(api);
+      const products = await res.json();
+      const table = document.getElementById('productTable');
+      table.innerHTML = '';
+      products.forEach(p => {
+        table.innerHTML += `<tr>
+          <td>${p.name}</td>
+          <td>${p.price}</td>
+          <td>
+            <button onclick="editProduct('${p._id}', '${p.name}', ${p.price})">Update</button>
+            <button onclick="deleteProduct('${p._id}')">Delete</button>
+          </td>
+        </tr>`;
+      });
+    }
+
+    async function addProduct() {
+      const id = document.getElementById('productId').value;
+      const name = document.getElementById('name').value.trim();
+      const price = parseFloat(document.getElementById('price').value);
+
+      if (!name) {
+        showToast('Product name is required', '#d9534f');
+        return;
+      }
+      if (isNaN(price) || price <= 0) {
+        showToast('Price must be a positive number', '#d9534f');
+        return;
+      }
+
+      const payload = { name, price };
+
+      try {
+        if (id) {
+          await fetch(`${api}/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          showToast('Product updated!', '#5cb85c');
+        } else {
+          const res = await fetch(api, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (!res.ok) {
+            const err = await res.json();
+            if (res.status === 400 && err.message === 'Product already exists') {
+              showToast('Product already exists', '#f0ad4e');
+              return;
+            } else {
+              throw new Error(err.message || 'Add failed');
+            }
+          }
+
+          showToast('Product added!', '#0275d8');
+        }
+
+        clearForm();
+        fetchProducts();
+      } catch (err) {
+        showToast(err.message || 'Error while saving product', '#d9534f');
+        console.error(err);
+      }
+    }
+
+    function editProduct(id, name, price) {
+      document.getElementById('productId').value = id;
+      document.getElementById('name').value = name;
+      document.getElementById('price').value = price;
+    }
+
+    async function deleteProduct(id) {
+      try {
+        await fetch(`${api}/${id}`, { method: 'DELETE' });
+        showToast('Product deleted!', '#f0ad4e');
+        fetchProducts();
+      } catch (err) {
+        showToast('Error deleting product', '#d9534f');
+      }
+    }
+  </script>
+</body>
+</html>

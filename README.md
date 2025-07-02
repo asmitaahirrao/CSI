@@ -17,3 +17,6 @@ Develop a simple application to Create, Read, Update, and Delete (CRUD) entries 
 
 # Assignment no. 6 - Develop a RESTful API.
 Create a RESTful API using Node.js and Express that supports basic CRUD operations on a resource (like users, products, etc.)
+
+# Assignment no. 7 - Implement JWT-based authentication in your API.
+Add JSON Web Token (JWT) authentication to your existing RESTful API. Ensure secure handling of tokens and implement a protected route.

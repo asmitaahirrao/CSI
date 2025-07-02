@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>JWT Auth UI</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f8ff;
+      margin: 0;
+      padding: 40px;
+    }
+
+    .container {
+      display: flex;
+      justify-content: space-between;
+      gap: 40px;
+      max-width: 900px;
+      margin: auto;
+    }
+
+    .form-box {
+      width: 45%;
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      color: #1a73e8;
+      margin-bottom: 20px;
+    }
+
+    input {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: #1a73e8;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background: #155ecf;
+    }
+
+    .protected {
+      text-align: center;
+      margin-top: 40px;
+    }
+
+    #result {
+      margin-top: 20px;
+      font-weight: bold;
+      color: green;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Register Section -->
+    <div class="form-box">
+      <h2>Register</h2>
+      <input id="reg_name" placeholder="Name">
+      <input id="reg_email" placeholder="Email">
+      <input id="reg_password" placeholder="Password" type="password">
+      <button onclick="register()">Register</button>
+    </div>
+
+    <!-- Login Section -->
+    <div class="form-box">
+      <h2>Login</h2>
+      <input id="log_email" placeholder="Email">
+      <input id="log_password" placeholder="Password" type="password">
+      <button onclick="login()">Login</button>
+    </div>
+  </div>
+
+  <!-- Protected Section -->
+  <div class="protected">
+    <h2>Protected Route</h2>
+    <button onclick="getProtected()">Get Protected Message</button>
+    <p id="result"></p>
+  </div>
+
+  <script>
+    let token = '';
+
+    async function register() {
+      const name = document.getElementById('reg_name').value;
+      const email = document.getElementById('reg_email').value;
+      const password = document.getElementById('reg_password').value;
+
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
+      });
+
+      const data = await res.json();
+      token = data.token;
+      alert('Registered! Token stored.');
+    }
+
+    async function login() {
+      const email = document.getElementById('log_email').value;
+      const password = document.getElementById('log_password').value;
+
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await res.json();
+      token = data.token;
+      alert('Logged in! Token stored.');
+    }
+
+    async function getProtected() {
+      const res = await fetch('/api/protected', {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      const data = await res.json();
+      document.getElementById('result').innerText = data.message || data.error || JSON.stringify(data);
+    }
+  </script>
+</body>
+</html>
